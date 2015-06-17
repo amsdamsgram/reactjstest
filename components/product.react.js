@@ -2,37 +2,25 @@
  * Created by idams on 6/16/15.
  */
 
-var ProductCategoryRow = React.createClass({
-
-    propTypes:{
-        category: React.PropTypes.string
-    },
-
-    getDefaultProps:function(){
-        return {
-            category: null
-        }
-    },
-
-    render:function(){
-        return <tr><th colSpan="2">{this.props.category}</th></tr>
+class ProductCategoryRow extends React.Component{
+    constructor(props){
+        super(props);
     }
 
-})
+    render(){
+        return <tr><th colSpan="2">{this.props.category}</th></tr>
+    }
+}
+ProductCategoryRow.propTypes = {category: React.PropTypes.string};
+ProductCategoryRow.defaultProps = {category: null};
 
-var ProductRow = React.createClass({
+class ProductRow extends React.Component{
 
-    propTypes:{
-        product: React.PropTypes.object
-    },
+    constructor(props){
+        super(props);
+    }
 
-    getDefaultProps:function(){
-        return {
-            product: {}
-        }
-    },
-
-    render:function(){
+    render(){
         var name = this.props.product.stocked ? this.props.product.name :
             <span style={{color:'red'}}>{this.props.product.name}</span>;
         return (
@@ -42,48 +30,38 @@ var ProductRow = React.createClass({
             </tr>
         )
     }
-})
+}
+ProductRow.propTypes = {product: React.PropTypes.object};
+ProductRow.defaultProps = {product: {}};
 
-var ProductTable = React.createClass({
+class ProductTable extends React.Component{
 
-    propTypes:{
-        products: React.PropTypes.array,
-        filterText: React.PropTypes.string,
-        inStockOnly: React.PropTypes.bool
-    },
+    constructor(props){
+        super(props);
+    }
 
-    getDefaultProps:function(){
-        return {
-            products: [],
-            filterText: null,
-            inStockOnly: false
-        }
-    },
-
-    _filterProduct:function(product,regex){
+    _filterProduct(product,regex){
         if( this.props.inStockOnly && !product.stocked) return false;
 
         if( regex ) return product.name.search(regex) > -1;
 
         return true;
-    },
+    }
 
-    render:function(){
+    render(){
         var rows = [];
         var lastCategory = null;
         var regex = this.props.filterText ? new RegExp(this.props.filterText,'i') : null;
 
-        var self = this;
-
         this.props.products.forEach(function(product){
-            if( self._filterProduct(product,regex) ){
+            if( this._filterProduct(product,regex) ){
                 if( lastCategory !== product.category ){
                     rows.push(<ProductCategoryRow category={product.category} />);
                 }
                 rows.push(<ProductRow product={product} />);
                 lastCategory = product.category;
             }
-        });
+        }.bind(this));
 
         return (
             <table>
@@ -99,27 +77,31 @@ var ProductTable = React.createClass({
             </table>
         )
     }
-})
+}
+ProductTable.propTypes = {
+    products: React.PropTypes.array,
+    filterText: React.PropTypes.string,
+    inStockOnly: React.PropTypes.bool
+};
+ProductTable.defaultProps = {
+    products: [],
+    filterText: null,
+    inStockOnly: false
+};
 
-var SearchBar = React.createClass({
+class SearchBar extends React.Component{
 
-    propTypes:{
-        filterText: React.PropTypes.string,
-        inStockOnly: React.PropTypes.bool
-    },
+    constructor(props){
+        super(props);
 
-    getDefaultProps:function(){
-        return {
-            filterText: null,
-            inStockOnly: false
-        }
-    },
+        this._handleChange = this._handleChange.bind(this);
+    }
 
-    _handleChange:function(){
+    _handleChange(){
         this.props.onChange(this);
-    },
+    }
 
-    render:function(){
+    render(){
         return (
             <form>
                 <input type="text" placeholder="Search..." value={this.props.filterText} onChange={this._handleChange} ref="text" />
@@ -127,34 +109,36 @@ var SearchBar = React.createClass({
             </form>
         )
     }
-})
+}
+SearchBar.propTypes = {
+    filterText: React.PropTypes.string,
+    inStockOnly: React.PropTypes.bool,
+    onChange: React.PropTypes.func
+};
+SearchBar.defaultProps = {
+    filterText: null,
+    inStockOnly: false,
+    onChange: null
+};
 
-var FilterableProductTable = React.createClass({
 
-    propTypes:{
-        products: React.PropTypes.array
-    },
+class FilterableProductTable extends React.Component{
 
-    getInitialState:function(){
-        return {
-            filterText: null,
-            inStockOnly: false
-        }
-    },
-    getDefaultProps:function(){
-      return {
-          products: []
-      }
-    },
+    constructor(props){
+        super(props);
 
-    _handleChange:function(child){
+        this.state = {filterText:null, inStockOnly:false};
+        this._handleChange = this._handleChange.bind(this);
+    }
+
+    _handleChange(child){
         var text = React.findDOMNode(child.refs.text).value.trim();
         var checked = React.findDOMNode(child.refs.stock).checked;
 
         this.setState({filterText:text,inStockOnly:checked});
-    },
+    }
 
-    render:function(){
+    render(){
         return (
             <div classNam="productTable">
                 <SearchBar
@@ -170,7 +154,14 @@ var FilterableProductTable = React.createClass({
             </div>
         )
     }
-})
+}
+FilterableProductTable.propTypes = {
+    products: React.PropTypes.array
+};
+FilterableProductTable.defaultProps = {
+    products: []
+};
+
 
 
 var PRODUCTS = [
