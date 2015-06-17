@@ -4,6 +4,16 @@
 
 var ProductCategoryRow = React.createClass({
 
+    propTypes:{
+        category: React.PropTypes.string
+    },
+
+    getDefaultProps:function(){
+        return {
+            category: null
+        }
+    },
+
     render:function(){
         return <tr><th colSpan="2">{this.props.category}</th></tr>
     }
@@ -11,6 +21,16 @@ var ProductCategoryRow = React.createClass({
 })
 
 var ProductRow = React.createClass({
+
+    propTypes:{
+        product: React.PropTypes.object
+    },
+
+    getDefaultProps:function(){
+        return {
+            product: {}
+        }
+    },
 
     render:function(){
         var name = this.props.product.stocked ? this.props.product.name :
@@ -26,16 +46,43 @@ var ProductRow = React.createClass({
 
 var ProductTable = React.createClass({
 
+    propTypes:{
+        products: React.PropTypes.array,
+        filterText: React.PropTypes.string,
+        inStockOnly: React.PropTypes.bool
+    },
+
+    getDefaultProps:function(){
+        return {
+            products: [],
+            filterText: null,
+            inStockOnly: false
+        }
+    },
+
+    _filterProduct:function(product,regex){
+        if( this.props.inStockOnly && !product.stocked) return false;
+
+        if( regex ) return product.name.search(regex) > -1;
+
+        return true;
+    },
+
     render:function(){
         var rows = [];
         var lastCategory = null;
+        var regex = this.props.filterText ? new RegExp(this.props.filterText,'i') : null;
+
+        var self = this;
 
         this.props.products.forEach(function(product){
-            if( lastCategory !== product.category ){
-                rows.push(<ProductCategoryRow category={product.category} />);
+            if( self._filterProduct(product,regex) ){
+                if( lastCategory !== product.category ){
+                    rows.push(<ProductCategoryRow category={product.category} />);
+                }
+                rows.push(<ProductRow product={product} />);
+                lastCategory = product.category;
             }
-            rows.push(<ProductRow product={product} />);
-            lastCategory = product.category;
         });
 
         return (
@@ -56,17 +103,27 @@ var ProductTable = React.createClass({
 
 var SearchBar = React.createClass({
 
-    handleTextChange:function(e){
-        var text = e.target.value;
+    propTypes:{
+        filterText: React.PropTypes.string,
+        inStockOnly: React.PropTypes.bool
+    },
 
+    getDefaultProps:function(){
+        return {
+            filterText: null,
+            inStockOnly: false
+        }
+    },
 
+    _handleChange:function(){
+        this.props.onChange(this);
     },
 
     render:function(){
         return (
             <form>
-                <input type="text" placeholder="Search..." onChange={this.handleTextChange} />
-                <input type="checkbox" checked={this.props.inStockOnly} />show products in stock
+                <input type="text" placeholder="Search..." value={this.props.filterText} onChange={this._handleChange} ref="text" />
+                <label><input type="checkbox" checked={this.props.inStockOnly} onChange={this._handleChange} ref="stock" />show products in stock</label>
             </form>
         )
     }
@@ -80,8 +137,8 @@ var FilterableProductTable = React.createClass({
 
     getInitialState:function(){
         return {
-            filterText:'',
-            inStockOnly:false
+            filterText: null,
+            inStockOnly: false
         }
     },
     getDefaultProps:function(){
@@ -90,17 +147,25 @@ var FilterableProductTable = React.createClass({
       }
     },
 
+    _handleChange:function(child){
+        var text = React.findDOMNode(child.refs.text).value.trim();
+        var checked = React.findDOMNode(child.refs.stock).checked;
+
+        this.setState({filterText:text,inStockOnly:checked});
+    },
+
     render:function(){
         return (
             <div classNam="productTable">
                 <SearchBar
-                    filterText={this.state.filterText}
-                    inStockOnly={this.state.inStockOnly}
+                    filterText = {this.state.filterText}
+                    inStockOnly = {this.state.inStockOnly}
+                    onChange = {this._handleChange}
                 />
                 <ProductTable
-                    products={this.props.products}
-                    filterText={this.state.filterText}
-                    inStockOnly={this.state.inStockOnly}
+                    products = {this.props.products}
+                    filterText = {this.state.filterText}
+                    inStockOnly = {this.state.inStockOnly}
                 />
             </div>
         )
