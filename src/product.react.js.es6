@@ -18,6 +18,7 @@ class ProductRow extends React.Component{
 
     constructor(props){
         super(props);
+        console.log('test');
     }
 
     render(){
