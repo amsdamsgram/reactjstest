@@ -136,7 +136,7 @@ class FilterableProductTable extends React.Component{
     }
 
     _handleChange(child){
-        var text = React.findDOMNode(null).value.trim();
+        var text = React.findDOMNode(child.refs.text).value.trim();
         var checked = React.findDOMNode(child.refs.stock).checked;
 
         this.setState({filterText:text,inStockOnly:checked});
